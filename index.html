@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Schengen">
+<meta name="theme-color" content="#f4ede0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Schengen Days</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #f4ede0;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(139, 90, 43, 0.04) 0%, transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(61, 90, 61, 0.03) 0%, transparent 50%);
+    color: #2a2520;
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: max(24px, env(safe-area-inset-top)) 18px max(80px, env(safe-area-inset-bottom));
+    position: relative;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0px, transparent 1px, transparent 3px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.012) 0px, transparent 1px, transparent 3px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(42, 37, 32, 0.15);
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -3px;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 5px;
+    background: #2a2520;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #8b6f47;
+    margin-bottom: 8px;
+  }
+
+  .title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    font-style: italic;
+  }
+
+  .subtitle {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #5a4a35;
+    margin-top: 10px;
+  }
+
+  .ring-card {
+    background: rgba(255, 252, 245, 0.6);
+    border: 1px solid rgba(42, 37, 32, 0.12);
+    border-radius: 4px;
+    padding: 28px 20px;
+    margin-bottom: 24px;
+    position: relative;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .ring-card::before {
+    content: 'STATUS';
+    position: absolute;
+    top: -8px;
+    left: 20px;
+    background: #f4ede0;
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: #8b6f47;
+  }
+
+  .ring-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .ring-svg {
+    width: 180px;
+    height: 180px;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: rgba(42, 37, 32, 0.08);
+    stroke-width: 8;
+  }
+
+  .ring-fg {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s;
+  }
+
+  .ring-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+
+  .big-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 500;
+    line-height: 1;
+    font-style: italic;
+  }
+
+  .big-number-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #5a4a35;
+    margin-top: 4px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed rgba(42, 37, 32, 0.2);
+  }
+
+  .stat { text-align: center; }
+
+  .stat-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #8b6f47;
+    margin-bottom: 6px;
+  }
+
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .stat-value.small { font-size: 15px; }
+  .stat-value.warn { color: #8b2a2a; }
+  .stat-value.good { color: #3d5a3d; }
+
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(42, 37, 32, 0.15);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #8b6f47;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab.active { color: #2a2520; }
+
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #2a2520;
+  }
+
+  .form-card {
+    background: rgba(255, 252, 245, 0.6);
+    border: 1px solid rgba(42, 37, 32, 0.12);
+    border-radius: 4px;
+    padding: 24px 18px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .form-card::before {
+    content: 'ADD ENTRY';
+    position: absolute;
+    top: -8px;
+    left: 20px;
+    background: #f4ede0;
+    padding: 0 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.3em;
+    color: #8b6f47;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .field { display: flex; flex-direction: column; }
+
+  .field-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #8b6f47;
+    margin-bottom: 6px;
+  }
+
+  .input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(42, 37, 32, 0.3);
+    padding: 8px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    color: #2a2520;
+    outline: none;
+    transition: border-color 0.2s;
+    font-weight: 500;
+    width: 100%;
+    border-radius: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .input:focus { border-bottom-color: #2a2520; }
+
+  select.input {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .field-full { margin-bottom: 18px; }
+
+  .btn {
+    width: 100%;
+    background: #2a2520;
+    color: #f4ede0;
+    border: none;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+  }
+
+  .btn:hover { background: #1a1510; }
+  .btn:active { transform: scale(0.98); }
+
+  .trip-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .trip {
+    background: rgba(255, 252, 245, 0.7);
+    border: 1px solid rgba(42, 37, 32, 0.12);
+    border-left: 3px solid #2a2520;
+    padding: 14px 16px;
+    position: relative;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .trip.violation {
+    border-left-color: #8b2a2a;
+    background: rgba(139, 42, 42, 0.04);
+  }
+
+  .trip.future {
+    border-left-color: #5a7a4a;
+    border-left-style: dashed;
+  }
+
+  .trip-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+
+  .trip-country {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .trip-days {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #5a4a35;
+    background: rgba(42, 37, 32, 0.06);
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .trip-dates {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #5a4a35;
+    letter-spacing: 0.05em;
+  }
+
+  .trip-note {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: #5a4a35;
+    margin-top: 6px;
+  }
+
+  .trip-validation {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(42, 37, 32, 0.2);
+    letter-spacing: 0.05em;
+  }
+
+  .trip-validation.ok { color: #3d5a3d; }
+  .trip-validation.bad { color: #8b2a2a; }
+
+  .delete-btn {
+    background: transparent;
+    border: none;
+    color: #8b6f47;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 8px;
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
+  }
+
+  .delete-btn:hover { opacity: 1; color: #8b2a2a; }
+
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #8b6f47;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 18px;
+  }
+
+  .footer-note {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(42, 37, 32, 0.12);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: #8b6f47;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="eyebrow">— established 1985 —</div>
+    <h1 class="title">Schengen Days</h1>
+    <div class="subtitle">90 / 180 · rolling window</div>
+  </header>
+
+  <div class="ring-card">
+    <div class="ring-container">
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 200 200">
+          <circle class="ring-bg" cx="100" cy="100" r="86"></circle>
+          <circle id="ringFg" class="ring-fg" cx="100" cy="100" r="86"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="big-number" id="bigNumber">90</div>
+          <div class="big-number-sub">days left</div>
+        </div>
+      </div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+  </div>
+
+  <div class="form-card">
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label">entry</label>
+        <input type="date" class="input" id="entryDate">
+      </div>
+      <div class="field">
+        <label class="field-label">exit</label>
+        <input type="date" class="input" id="exitDate">
+      </div>
+    </div>
+    <div class="field field-full">
+      <label class="field-label">country</label>
+      <select class="input" id="countrySelect"></select>
+    </div>
+    <div class="field field-full">
+      <label class="field-label">note (optional)</label>
+      <input type="text" class="input" id="noteInput" placeholder="residency, conference, visit...">
+    </div>
+    <button class="btn" id="addBtn">Add Trip</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-view="past" id="tabPast">History · 0</button>
+    <button class="tab" data-view="future" id="tabFuture">Planned · 0</button>
+  </div>
+
+  <div id="tripList" class="trip-list"></div>
+
+  <div class="footer-note">
+    ✦ data stored locally on this device ✦<br>
+    entry and exit days both count toward your 90
+  </div>
+</div>
+
+<script>
+const COUNTRIES = [
+  'Austria','Belgium','Croatia','Czechia','Denmark','Estonia','Finland','France',
+  'Germany','Greece','Hungary','Iceland','Italy','Latvia','Liechtenstein','Lithuania',
+  'Luxembourg','Malta','Netherlands','Norway','Poland','Portugal','Slovakia','Slovenia',
+  'Spain','Sweden','Switzerland','Bulgaria','Romania'
+];
+
+const $ = (id) => document.getElementById(id);
+const fmtDate = (d) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtDateShort = (d) => new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+const toISODate = (d) => {
+  const date = new Date(d);
+  date.setHours(12,0,0,0);
+  return date.toISOString().split('T')[0];
+};
+const todayISO = () => toISODate(new Date());
+
+const daysBetween = (start, end) => {
+  const s = new Date(start); s.setHours(0,0,0,0);
+  const e = new Date(end); e.setHours(0,0,0,0);
+  return Math.floor((e - s) / 86400000) + 1;
+};
+
+const daysInWindow = (trips, refDateISO) => {
+  const ref = new Date(refDateISO); ref.setHours(0,0,0,0);
+  const windowStart = new Date(ref);
+  windowStart.setDate(windowStart.getDate() - 179);
+  let total = 0;
+  for (const trip of trips) {
+    const entry = new Date(trip.entry); entry.setHours(0,0,0,0);
+    const exit = new Date(trip.exit); exit.setHours(0,0,0,0);
+    const overlapStart = entry > windowStart ? entry : windowStart;
+    const overlapEnd = exit < ref ? exit : ref;
+    if (overlapEnd >= overlapStart) {
+      total += Math.floor((overlapEnd - overlapStart) / 86400000) + 1;
+    }
+  }
+  return total;
+};
+
+const nextResetDate = (trips, refDateISO) => {
+  const ref = new Date(refDateISO);
+  for (let i = 1; i <= 200; i++) {
+    const test = new Date(ref);
+    test.setDate(test.getDate() + i);
+    if (daysInWindow(trips, toISODate(test)) === 0) return toISODate(test);
+  }
+  return null;
+};
+
+const validateFutureTrip = (existingTrips, futureEntry, futureExit) => {
+  const allTrips = [...existingTrips, { entry: futureEntry, exit: futureExit }];
+  const start = new Date(futureEntry);
+  const end = new Date(futureExit);
+  let maxUsed = 0;
+  let violationDate = null;
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const used = daysInWindow(allTrips, toISODate(d));
+    if (used > maxUsed) maxUsed = used;
+    if (used > 90 && !violationDate) violationDate = toISODate(d);
+  }
+  return { maxUsed, violationDate, valid: !violationDate };
+};
+
+// State
+let trips = JSON.parse(localStorage.getItem('schengen_trips') || '[]');
+let futureTrips = JSON.parse(localStorage.getItem('schengen_future') || '[]');
+let view = 'past';
+
+const save = () => {
+  localStorage.setItem('schengen_trips', JSON.stringify(trips));
+  localStorage.setItem('schengen_future', JSON.stringify(futureTrips));
+};
+
+// Populate country select
+const sel = $('countrySelect');
+COUNTRIES.forEach(c => {
+  const o = document.createElement('option');
+  o.value = c; o.textContent = c;
+  if (c === 'Poland') o.selected = true;
+  sel.appendChild(o);
+});
+
+// Date defaults
+$('entryDate').value = todayISO();
+$('exitDate').value = todayISO();
+
+$('entryDate').addEventListener('change', (e) => {
+  if (new Date(e.target.value) > new Date($('exitDate').value)) {
+    $('exitDate').value = e.target.value;
+  }
+  $('exitDate').min = e.target.value;
+  updateBtnLabel();
+});
+$('exitDate').addEventListener('change', updateBtnLabel);
+
+function updateBtnLabel() {
+  const isFuture = new Date($('entryDate').value) > new Date(todayISO());
+  $('addBtn').textContent = isFuture ? 'Add Future Trip' : 'Add Past Trip';
+}
+
+$('addBtn').addEventListener('click', () => {
+  const entry = $('entryDate').value;
+  const exit = $('exitDate').value;
+  const country = $('countrySelect').value;
+  const note = $('noteInput').value.trim();
+  if (!entry || !exit) return;
+  if (new Date(exit) < new Date(entry)) return;
+  const trip = { id: Date.now(), entry, exit, country, note };
+  if (new Date(entry) > new Date(todayISO())) {
+    futureTrips.push(trip);
+    futureTrips.sort((a,b) => a.entry.localeCompare(b.entry));
+  } else {
+    trips.push(trip);
+    trips.sort((a,b) => a.entry.localeCompare(b.entry));
+  }
+  save();
+  $('noteInput').value = '';
+  render();
+});
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    view = t.dataset.view;
+    document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+    renderList();
+  });
+});
+
+window.deleteTrip = (id, isFuture) => {
+  if (isFuture) futureTrips = futureTrips.filter(t => t.id !== id);
+  else trips = trips.filter(t => t.id !== id);
+  save();
+  render();
+};
+
+function render() {
+  const today = todayISO();
+  const used = daysInWindow(trips, today);
+  const remaining = Math.max(0, 90 - used);
+  const pct = Math.min(100, (used / 90) * 100);
+  const circumference = 2 * Math.PI * 86;
+  const color = pct < 60 ? '#3d5a3d' : pct < 85 ? '#a87c2a' : '#8b2a2a';
+
+  $('bigNumber').textContent = remaining;
+  const ring = $('ringFg');
+  ring.setAttribute('stroke', color);
+  ring.setAttribute('stroke-dasharray', circumference);
+  ring.setAttribute('stroke-dashoffset', circumference * (1 - pct / 100));
+
+  // stats
+  let nextDayBack = null;
+  if (used > 0) {
+    for (let i = 1; i <= 180; i++) {
+      const test = new Date(today);
+      test.setDate(test.getDate() + i);
+      if (daysInWindow(trips, toISODate(test)) < used) { nextDayBack = toISODate(test); break; }
+    }
+  }
+  const fullReset = nextResetDate(trips, today);
+
+  let statsHTML = `
+    <div class="stat">
+      <div class="stat-label">used</div>
+      <div class="stat-value">${used} <span style="font-size:14px;color:#8b6f47">/ 90</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">as of</div>
+      <div class="stat-value small">${fmtDateShort(today)}</div>
+    </div>
+  `;
+  if (nextDayBack) {
+    statsHTML += `<div class="stat">
+      <div class="stat-label">+1 day on</div>
+      <div class="stat-value small good">${fmtDateShort(nextDayBack)}</div>
+    </div>`;
+  }
+  if (fullReset) {
+    statsHTML += `<div class="stat">
+      <div class="stat-label">full 90 on</div>
+      <div class="stat-value small good">${fmtDateShort(fullReset)}</div>
+    </div>`;
+  }
+  $('statsGrid').innerHTML = statsHTML;
+
+  $('tabPast').textContent = `History · ${trips.length}`;
+  $('tabFuture').textContent = `Planned · ${futureTrips.length}`;
+  renderList();
+}
+
+function renderList() {
+  const list = $('tripList');
+  if (view === 'past') {
+    if (trips.length === 0) {
+      list.innerHTML = '<div class="empty">no entries yet —<br>add your first trip above</div>';
+      return;
+    }
+    list.innerHTML = [...trips].reverse().map(t => `
+      <div class="trip">
+        <div class="trip-head">
+          <div class="trip-country">${escapeHtml(t.country)}</div>
+          <div class="trip-days">${daysBetween(t.entry, t.exit)}d</div>
+        </div>
+        <div class="trip-dates">${fmtDate(t.entry)} → ${fmtDate(t.exit)}</div>
+        ${t.note ? `<div class="trip-note">"${escapeHtml(t.note)}"</div>` : ''}
+        <button class="delete-btn" onclick="deleteTrip(${t.id}, false)">× remove</button>
+      </div>
+    `).join('');
+  } else {
+    if (futureTrips.length === 0) {
+      list.innerHTML = '<div class="empty">no future trips planned —<br>add a trip dated after today</div>';
+      return;
+    }
+    list.innerHTML = futureTrips.map(ft => {
+      const others = futureTrips.filter(f => f.id !== ft.id && f.entry < ft.entry);
+      const combined = [...trips, ...others];
+      const v = validateFutureTrip(combined, ft.entry, ft.exit);
+      return `
+        <div class="trip future ${!v.valid ? 'violation' : ''}">
+          <div class="trip-head">
+            <div class="trip-country">${escapeHtml(ft.country)}</div>
+            <div class="trip-days">${daysBetween(ft.entry, ft.exit)}d</div>
+          </div>
+          <div class="trip-dates">${fmtDate(ft.entry)} → ${fmtDate(ft.exit)}</div>
+          ${ft.note ? `<div class="trip-note">"${escapeHtml(ft.note)}"</div>` : ''}
+          <div class="trip-validation ${v.valid ? 'ok' : 'bad'}">
+            ${v.valid
+              ? `✓ ALLOWED · peak usage ${v.maxUsed}/90`
+              : `✗ EXCEEDS LIMIT on ${fmtDateShort(v.violationDate)} · peak ${v.maxUsed}/90`}
+          </div>
+          <button class="delete-btn" onclick="deleteTrip(${ft.id}, true)">× remove</button>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+render();
+
+// Service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
