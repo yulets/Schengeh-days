@@ -254,7 +254,7 @@
   }
 
   .form-card::before {
-    content: 'ADD ENTRY';
+    content: attr(data-label);
     position: absolute;
     top: -8px;
     left: 20px;
@@ -412,12 +412,61 @@
     letter-spacing: 0.15em;
     cursor: pointer;
     padding: 4px 0;
-    margin-top: 8px;
     opacity: 0.6;
     transition: opacity 0.2s, color 0.2s;
   }
 
   .delete-btn:hover { opacity: 1; color: #8b2a2a; }
+
+  .edit-btn {
+    background: transparent;
+    border: none;
+    color: #8b6f47;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    padding: 4px 0;
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
+  }
+
+  .edit-btn:hover { opacity: 1; color: #2a2520; }
+
+  .trip-actions {
+    display: flex;
+    gap: 18px;
+    margin-top: 8px;
+  }
+
+  .trip.editing {
+    background: rgba(168, 124, 42, 0.08);
+    border-left-color: #a87c2a !important;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #2a2520;
+    border: 1px solid #2a2520;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    flex-shrink: 0;
+  }
+
+  .btn-secondary:hover { background: #2a2520; color: #f4ede0; }
 
   .empty {
     text-align: center;
@@ -449,7 +498,7 @@
 <body>
 <div class="container">
   <header class="header">
-    <div class="eyebrow">— established 1985 —</div>
+    <div class="eyebrow">— мишачий калькулятор —</div>
     <h1 class="title">Schengen Days</h1>
     <div class="subtitle">90 / 180 · rolling window</div>
   </header>
@@ -470,7 +519,7 @@
     <div class="stats-grid" id="statsGrid"></div>
   </div>
 
-  <div class="form-card">
+  <div class="form-card" id="formCard" data-label="ADD ENTRY">
     <div class="field-row">
       <div class="field">
         <label class="field-label">entry</label>
@@ -489,7 +538,10 @@
       <label class="field-label">note (optional)</label>
       <input type="text" class="input" id="noteInput" placeholder="residency, conference, visit...">
     </div>
-    <button class="btn" id="addBtn">Add Trip</button>
+    <div class="btn-row">
+      <button class="btn" id="addBtn">Add Trip</button>
+      <button class="btn-secondary" id="cancelBtn" style="display:none">Cancel</button>
+    </div>
   </div>
 
   <div class="tabs">
@@ -527,7 +579,7 @@ const todayISO = () => toISODate(new Date());
 const daysBetween = (start, end) => {
   const s = new Date(start); s.setHours(0,0,0,0);
   const e = new Date(end); e.setHours(0,0,0,0);
-  return Math.floor((e - s) / 86400000) + 1;
+  return Math.round((e - s) / 86400000) + 1;
 };
 
 const daysInWindow = (trips, refDateISO) => {
@@ -541,7 +593,7 @@ const daysInWindow = (trips, refDateISO) => {
     const overlapStart = entry > windowStart ? entry : windowStart;
     const overlapEnd = exit < ref ? exit : ref;
     if (overlapEnd >= overlapStart) {
-      total += Math.floor((overlapEnd - overlapStart) / 86400000) + 1;
+      total += Math.round((overlapEnd - overlapStart) / 86400000) + 1;
     }
   }
   return total;
@@ -575,6 +627,7 @@ const validateFutureTrip = (existingTrips, futureEntry, futureExit) => {
 let trips = JSON.parse(localStorage.getItem('schengen_trips') || '[]');
 let futureTrips = JSON.parse(localStorage.getItem('schengen_future') || '[]');
 let view = 'past';
+let editingId = null; // id of trip being edited, null when adding
 
 const save = () => {
   localStorage.setItem('schengen_trips', JSON.stringify(trips));
@@ -604,9 +657,46 @@ $('entryDate').addEventListener('change', (e) => {
 $('exitDate').addEventListener('change', updateBtnLabel);
 
 function updateBtnLabel() {
+  if (editingId !== null) {
+    $('addBtn').textContent = 'Update Trip';
+    return;
+  }
   const isFuture = new Date($('entryDate').value) > new Date(todayISO());
   $('addBtn').textContent = isFuture ? 'Add Future Trip' : 'Add Past Trip';
 }
+
+function startEdit(id) {
+  const all = [...trips, ...futureTrips];
+  const trip = all.find(t => t.id === id);
+  if (!trip) return;
+  editingId = id;
+  $('entryDate').value = trip.entry;
+  $('exitDate').value = trip.exit;
+  $('exitDate').min = trip.entry;
+  $('countrySelect').value = trip.country;
+  $('noteInput').value = trip.note || '';
+  $('formCard').setAttribute('data-label', 'EDIT ENTRY');
+  $('cancelBtn').style.display = 'block';
+  updateBtnLabel();
+  renderList();
+  // scroll form into view
+  $('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEdit() {
+  editingId = null;
+  $('noteInput').value = '';
+  $('entryDate').value = todayISO();
+  $('exitDate').value = todayISO();
+  $('exitDate').min = todayISO();
+  $('countrySelect').value = 'Poland';
+  $('formCard').setAttribute('data-label', 'ADD ENTRY');
+  $('cancelBtn').style.display = 'none';
+  updateBtnLabel();
+  renderList();
+}
+
+$('cancelBtn').addEventListener('click', cancelEdit);
 
 $('addBtn').addEventListener('click', () => {
   const entry = $('entryDate').value;
@@ -615,6 +705,25 @@ $('addBtn').addEventListener('click', () => {
   const note = $('noteInput').value.trim();
   if (!entry || !exit) return;
   if (new Date(exit) < new Date(entry)) return;
+
+  if (editingId !== null) {
+    // Update existing trip — remove from both lists, then re-add to correct one
+    trips = trips.filter(t => t.id !== editingId);
+    futureTrips = futureTrips.filter(t => t.id !== editingId);
+    const trip = { id: editingId, entry, exit, country, note };
+    if (new Date(entry) > new Date(todayISO())) {
+      futureTrips.push(trip);
+      futureTrips.sort((a,b) => a.entry.localeCompare(b.entry));
+    } else {
+      trips.push(trip);
+      trips.sort((a,b) => a.entry.localeCompare(b.entry));
+    }
+    save();
+    cancelEdit();
+    render();
+    return;
+  }
+
   const trip = { id: Date.now(), entry, exit, country, note };
   if (new Date(entry) > new Date(todayISO())) {
     futureTrips.push(trip);
@@ -637,11 +746,14 @@ document.querySelectorAll('.tab').forEach(t => {
 });
 
 window.deleteTrip = (id, isFuture) => {
+  if (editingId === id) cancelEdit();
   if (isFuture) futureTrips = futureTrips.filter(t => t.id !== id);
   else trips = trips.filter(t => t.id !== id);
   save();
   render();
 };
+
+window.startEdit = startEdit;
 
 function render() {
   const today = todayISO();
@@ -705,14 +817,17 @@ function renderList() {
       return;
     }
     list.innerHTML = [...trips].reverse().map(t => `
-      <div class="trip">
+      <div class="trip ${editingId === t.id ? 'editing' : ''}">
         <div class="trip-head">
           <div class="trip-country">${escapeHtml(t.country)}</div>
           <div class="trip-days">${daysBetween(t.entry, t.exit)}d</div>
         </div>
         <div class="trip-dates">${fmtDate(t.entry)} → ${fmtDate(t.exit)}</div>
         ${t.note ? `<div class="trip-note">"${escapeHtml(t.note)}"</div>` : ''}
-        <button class="delete-btn" onclick="deleteTrip(${t.id}, false)">× remove</button>
+        <div class="trip-actions">
+          <button class="edit-btn" onclick="startEdit(${t.id})">✎ edit</button>
+          <button class="delete-btn" onclick="deleteTrip(${t.id}, false)">× remove</button>
+        </div>
       </div>
     `).join('');
   } else {
@@ -725,7 +840,7 @@ function renderList() {
       const combined = [...trips, ...others];
       const v = validateFutureTrip(combined, ft.entry, ft.exit);
       return `
-        <div class="trip future ${!v.valid ? 'violation' : ''}">
+        <div class="trip future ${!v.valid ? 'violation' : ''} ${editingId === ft.id ? 'editing' : ''}">
           <div class="trip-head">
             <div class="trip-country">${escapeHtml(ft.country)}</div>
             <div class="trip-days">${daysBetween(ft.entry, ft.exit)}d</div>
@@ -737,7 +852,10 @@ function renderList() {
               ? `✓ ALLOWED · peak usage ${v.maxUsed}/90`
               : `✗ EXCEEDS LIMIT on ${fmtDateShort(v.violationDate)} · peak ${v.maxUsed}/90`}
           </div>
-          <button class="delete-btn" onclick="deleteTrip(${ft.id}, true)">× remove</button>
+          <div class="trip-actions">
+            <button class="edit-btn" onclick="startEdit(${ft.id})">✎ edit</button>
+            <button class="delete-btn" onclick="deleteTrip(${ft.id}, true)">× remove</button>
+          </div>
         </div>
       `;
     }).join('');
